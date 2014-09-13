@@ -1,0 +1,120 @@
+# Version Control System - Subversion
+#
+# @todo detect if svn is available
+# @todo detect if the current repository is a Subversion repository
+
+import path ;
+import errors ;
+
+# Generates a version string from the Subversion repository assuming a
+# standard repository layout.
+#
+# If on a tag:
+#
+#    <tag-name>
+#
+# If not on a tag:
+#
+# @todo work to match the git format, missing nearest tag and commits
+# since nearest tag
+#
+#    -<URL>--s<REV>
+#
+# If the repository is dirty, "-dirty" will be appended.
+rule generate-version-string ( directory )
+{
+  local v = "" ;
+
+  if ! [ executable-exists ]
+  {
+    errors.user-error "vcs-svn: Subversion executable is not installed" ;
+  }
+
+  if ! [ is-repository $(directory) ]
+  {
+    errors.user-error "vcs-svn: $(directory) is not a Subversion repository." ;
+  }
+
+  local tag = "0" ;
+  local branch = "" ;
+  local commits = "0" ;
+  local revision = "" ;
+
+  local url = "" ;
+  local exact_match = "" ;
+
+  local lines = [ SHELL "svn info $(directory)" ] ;
+
+  lines = [ SPLIT_BY_CHARACTERS $(lines) : "\n" ] ;
+
+  for local line in $(lines)
+  {
+    local urlm = [ MATCH "^URL: (.+)\n$" : $(line) ] ;
+    if $(urlm)
+    {
+      url = $(urlm[1]) ;
+    }
+    local revisionm = [ MATCH "^Revision: ([0-9]+)\n$" : $(line) ] ;
+    if $(revisionm)
+    {
+      revision = $(revisionm[1]) ;
+    }
+  }
+
+  if $(url) != ""
+  {
+    tagm = [ MATCH "^.*/tags/(.+)$" : $(url) ] ;
+    if $(tagm)
+    {
+      exact_match = "exact_match" ;
+
+      tag = $(tagm[1]) ;
+    }
+
+    branchm = [ MATCH "^.*/branches/(.+)$" : $(url) ] ;
+    if $(branchm)
+    {
+      branch = $(branchm[1]) ;
+    }
+    else
+    {
+      trunkm = [ MATCH "^.*/(trunk)$" : $(url) ] ;
+      if $(trunkm)
+      {
+        branch = $(trunkm[1]) ;
+      }
+    }
+  }
+
+  # create the version string
+  if $(exact_match) = "exact_match"
+  {
+    v = $(tag) ;
+  }
+  else
+  {
+    v = $(tag)-$(branch)-$(commits)-s$(revision) ;
+  }
+
+  # check if the working copy is dirty
+  if [ SHELL "cd $(directory) ; svn diff" ] != ""
+  {
+    v = "$(v)-dirty" ;
+  }
+
+  return $(v) ;
+}
+
+# Returns true if the given directory is a Git repository.
+rule is-repository ( directory )
+{
+  # @todo is there a better way?
+  return [ path.exists "$(directory)/.svn" ] ;
+}
+
+# Return true if the Git executable exists.
+rule executable-exists ( )
+{
+  # @todo always say true for now
+  return 1 == 1 ;
+}

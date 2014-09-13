@@ -1,0 +1,13 @@
+# @todo HACK - add tools to the Boost.Build path
+{
+  import modules ;
+
+  local x = [ modules.peek : BOOST_BUILD_PATH ] ;
+  modules.poke : BOOST_BUILD_PATH : ../.. $(x) ;
+}
+
+import vcs ;
+
+# print information from vcs about this repository
+echo [ vcs.generate-version-string ../.. ] ;
+echo [ vcs.type ../.. ] ;

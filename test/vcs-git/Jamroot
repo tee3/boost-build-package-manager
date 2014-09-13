@@ -1,0 +1,19 @@
+# @todo HACK - add tools to the Boost.Build path
+{
+  import modules ;
+
+  local x = [ modules.peek : BOOST_BUILD_PATH ] ;
+  modules.poke : BOOST_BUILD_PATH : ../.. $(x) ;
+}
+
+import vcs-git ;
+
+import assert ;
+
+assert.true vcs-git.executable-exists ;
+
+# print information from vcs
+if [ vcs-git.is-repository ../.. ]
+{
+  echo [ vcs-git.generate-version-string ../.. ] ;
+}

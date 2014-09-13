@@ -1,0 +1,49 @@
+# Version Control System module
+#
+# @todo propose a minimal interface for vcs (checkout, etc.)
+
+import path ;
+import errors ;
+import assert ;
+
+# the list of supported vcs
+supported-vcs = git svn ;
+
+for vcs in $(supported-vcs)
+{
+  import vcs-$(vcs) ;
+}
+
+# Generates a version string from the auto-detected VCS repository.
+rule generate-version-string ( directory )
+{
+  if ! [ path.exists $(directory) ]
+  {
+    errors.user-error "$(directory) does not exist." ;
+  }
+
+  vcs = [ type $(directory) ] ;
+  assert.in $(vcs) : $(supported-vcs) ;
+
+  return [ vcs-$(vcs).generate-version-string $(directory) ] ;
+}
+
+# Returns a string describing the version control system.
+rule type ( directory )
+{
+  t = ;
+  for vcs in $(supported-vcs)
+  {
+    if [ vcs-$(vcs).is-repository $(directory) ]
+    {
+      t = $(vcs) ;
+    }
+  }
+
+  if ! $(t)
+  {
+    errors.error "unknown vcs system at $(directory)" ;
+  }
+
+  return $(t) ;
+}
