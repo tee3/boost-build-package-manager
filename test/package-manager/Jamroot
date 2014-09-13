@@ -1,0 +1,48 @@
+# @todo HACK - add tools to the Boost.Build path
+{
+  import modules ;
+
+  local x = [ modules.peek : BOOST_BUILD_PATH ] ;
+  modules.poke : BOOST_BUILD_PATH : ../.. $(x) ;
+}
+
+import package-manager ;
+
+import assert ;
+
+path-constant package-root : packages ;
+
+package-manager.init $(package-root) ;
+
+assert.equal [ package-manager.versioned-package-name boost-build : boost-1.55.0 ] : boost-build-boost-1.55.0 ;
+assert.equal [ package-manager.versioned-package-path boost-build : boost-1.55.0 ] : $(package-root)/boost-build-boost-1.55.0 ;
+
+# @todo all asserts should work, but they don't, race condition?
+# assert.equal [ package-manager.installed-packages ] : ;
+
+assert.false package-manager.is-installed boost-build : master ;
+assert.false package-manager.is-installed boost-build : boost-1.55.0 ;
+
+package-manager.require-package boost-build : master : https://github.com/boostorg/build  : git ;
+
+# assert.true package-manager.is-installed boost-build : master ;
+# assert.equal [ package-manager.versioned-package-path boost-build : master ] : $(package-root)/boost-build-master ;
+# assert.equal [ package-manager.installed-packages ] : boost-build-master ;
+
+package-manager.require-package boost-build : boost-1.55.0 : https://github.com/boostorg/build : git ;
+
+# assert.true package-manager.is-installed boost-build : boost-1.55.0 ;
+# assert.equal [ package-manager.versioned-package-path boost-build : boost-1.55.0 ] : $(package-root)/boost-build-boost-1.55.0 ;
+# assert.equal [ package-manager.installed-packages ] : boost-build-master boost-build-boost-1.55.0 ;
+
+package-manager.require-package boost-build : boost-1.54.0 : https://github.com/boostorg/build : svn ;
+
+# assert.true package-manager.is-installed boost-build : boost-1.54.0 ;
+# assert.equal [ package-manager.versioned-package-path boost-build : boost-1.54.0 ] : $(package-root)/boost-build-boost-1.54.0 ;
+# assert.equal [ package-manager.installed-packages ] : boost-build-master boost-build-boost-1.55.0 boost-build-boost-1.54.0 ;
+
+echo [ package-manager.installed-packages ] ;
+
+assert.in boost-build-master : [ package-manager.installed-packages ] ;
+assert.in boost-build-boost-1.55.0 : [ package-manager.installed-packages ] ;
+assert.in boost-build-boost-1.54.0 : [ package-manager.installed-packages ] ;

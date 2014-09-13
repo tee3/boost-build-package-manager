@@ -1,0 +1,199 @@
+# a package mananger
+#
+# gets a source package and puts it at path and checks out ref
+#
+# all packages are checked out to the same place, by version number
+# creates a 'database' of packages installed from boost.build
+#
+# @todo this needs a lot of work, probably needs a class, etc.
+# @todo this needs documentation to describe the overall process
+# @todo 'installed' needs to be better
+# @todo path.exists doesn't work, probably a race condition
+# @todo probably need a semaphore for the whole thing
+# @todo need to implement the use of .gitmodules and svn:externals
+# @todo probably more
+
+import vcs ;
+
+import path ;
+import errors ;
+import assert ;
+
+# this is a single root for *all* package-manager packages.  this
+# ensures that every project is using the same code (so it's not
+# duplicated).
+#
+# allow the user to specify this to allow it to be placed somewhere
+# meaningful and to allow there to be several source repositories if
+# desired.
+root = ;
+
+# Initialize the source package manager.
+rule init ( directory )
+{
+  root = $(directory) ;
+
+###  project package-manager ;
+}
+
+# Create source packages targets from various types of package
+# descriptions located at directory.
+#
+# 1. .gitmodules
+# 2. svn:externals properties on root directory only
+#
+# @todo this depends on git to parse packages
+rule detect-configuration ( directory )
+{
+  if [ path.exists $(directory)/.gitmodules ]
+  {
+    # parse .gitmodules and set up source packages
+  }
+  else if [ vcs-svn.svn-externals $(directory) ] != ""
+  {
+    # check for svn:externals on root directory, parse, and set up
+    # source packages
+  }
+  else
+  {
+    # no packages to generate automatically
+  }
+}
+
+# Creates a source package from the root URL at the package manager
+# root, with the directory name as described below, using the
+# indicated vcs.
+#
+# @todo try to make vcs detected (and so optional)
+rule require-package ( name : symbolic-ref : root-url : vcs : build-system ? )
+{
+  assert.variable-not-empty root ;
+
+  local versioned-name = [ versioned-package-name $(name) : $(symbolic-ref) ] ;
+  local package-dir = [ versioned-package-path $(name) : $(symbolic-ref) ] ;
+
+  if ! [ directory-exists $(package-dir) ]
+  {
+    vcs.fetch $(vcs) : $(root-url) : $(package-dir)  ;
+
+    # @todo not sure why this doesn't work
+    # assert.true directory-exists $(package-dir) ;
+
+    vcs.checkout $(package-dir) : $(symbolic-ref) ;
+  }
+
+  # check that it's from the root-url and at ref, if not warn or error
+  local current-root-url = [ vcs.root-url $(package-dir) ] ;
+
+  assert.variable-not-empty current-root-url ;
+
+  if $(current-root-url) != $(root-url)
+  {
+    errors.user-error "package-manager:$(vcs): $(package-dir) is at $(current-root-url) not $(root-url)" ;
+  }
+
+  local current-ref = [ vcs.ref $(package-dir) ] ;
+  local ref = [ vcs.ref $(package-dir) : $(symbolic-ref) ] ;
+
+  assert.variable-not-empty current-ref ;
+  assert.variable-not-empty ref ;
+
+  if $(current-ref) != $(ref)
+  {
+    errors.user-error "package-manager:$(vcs): $(package-dir) at $(current-ref) not $(ref)" ;
+  }
+
+###  # Boost.Build packages are set up as aliases.
+###  # @todo could allow user to specify the target
+###  if $(build-system)
+###  {
+###    local target-path = ;
+###    if $(build-system) = boost.build
+###    {
+###       target-path = $(package-dir)/$(name) ;
+###    }
+###    else
+###    {
+###       target-path = $(package-dir)/$(build-system) ;
+###    }
+###
+###    alias $(package-name)
+###      : # sources
+###      : # requirements
+###      : # usage-requirements
+###         $(target-path)
+###      : # default-build
+###      ;
+###  }
+}
+
+# Returns the list of installed packages.
+rule installed-packages ( )
+{
+  local absolute-packages = [ path.glob $(root) : * ] ;
+
+  local packages = ;
+  for p in $(absolute-packages)
+  {
+    packages += [ path.basename $(p) ] ;
+  }
+
+  return $(packages) ;
+}
+
+# @todo return all the installed versions for package name.
+# rule installed-versions ( name )
+# {
+# }
+
+# Returns true if the package name at the version indicated by the
+# symbolic-ref is installed, false otherwise.
+rule is-installed ( name : symbolic-ref )
+{
+  return [ directory-exists [ versioned-package-path $(name) : $(symbolic-ref) ] ] ;
+}
+
+# Returns the versioned name of the named package at the indicated
+# symbolic reference.
+#
+# If the symbolic-ref matches "^(refs/)?tags/(.*)$" then the directory
+# name is name-<secondmatch>.
+#
+# If the symbolic-ref matches "^((master)|(trunk)|branches/(.*))$",
+# then the directory name is name-<secondmatch>.
+#
+# Otherwise, the directory name is name-<symbolic-ref> with replaced
+# '/' with '-'.
+rule versioned-package-name ( name : symbolic-ref )
+{
+  # @todo do matching to normalize the directory names
+  local path-elements = [ SPLIT_BY_CHARACTERS $(symbolic-ref) : "/" ] ;
+
+  return $(name)-$(path-elements) ;
+}
+
+# Returns the path to the versioned package as described in
+# versioned-package-name.
+rule versioned-package-path ( name : symbolic-ref )
+{
+  local versioned-name = [ versioned-package-name $(name) : $(symbolic-ref) ] ;
+
+  return $(root)/$(versioned-name) ;
+}
+
+# a hopefully working directory-exists
+#
+# @todo figure out what's going on with path.exists
+local rule directory-exists ( directory )
+{
+  local directories = [ path.glob $(directory) : * ] ;
+
+  if $(directories) != ""
+  {
+    return true ;
+  }
+  else
+  {
+    return ;
+  }
+}

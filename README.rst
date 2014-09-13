@@ -10,6 +10,7 @@ This directory contains a ``package-manager`` module for interacting
 with 'packages' within Boost.Build and a ``vcs`` module for
 interacting with version control systems within Boost.Build.
 
+- `Package Manager <package-manager.rst>`_
 - `Version Control Systems (vcs) <vcs.rst>`_
 
 Testing Guidelines
