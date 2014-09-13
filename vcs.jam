@@ -17,10 +17,11 @@ for vcs in $(supported-vcs)
 # Generates a version string from the auto-detected VCS repository.
 rule generate-version-string ( directory )
 {
-  if ! [ path.exists $(directory) ]
-  {
-    errors.user-error "$(directory) does not exist." ;
-  }
+  # @todo need to fix this
+  # if ! [ path.exists $(directory) ]
+  # {
+  #   errors.user-error "$(directory) does not exist." ;
+  # }
 
   vcs = [ type $(directory) ] ;
   assert.in $(vcs) : $(supported-vcs) ;
@@ -46,4 +47,64 @@ rule type ( directory )
   }
 
   return $(t) ;
+}
+
+# Fetches from the given url to the given directory using the
+# indicated vcs.  If the directory already exists, the system will
+# check that the url matches, it is an error if it doesn't.
+rule fetch ( vcs : root-url : directory )
+{
+  assert.in $(vcs) : $(supported-vcs) ;
+
+  if [ path.exists $(directory) ]
+  {
+    assert.true type $(directory) : $(vcs) ;
+
+    local current-url = [ vcs-$(vcs).root-url $(directory) ] ;
+
+    if $(current-url) != $(root-url)
+    {
+      errors.error "vcs:$(vcs): $(directory) is at $(current-url) not $(root-url)" ;
+    }
+  }
+  else
+  {
+    echo "vcs: fetching $(root-url) to $(directory)" ;
+
+    local r1 = [ vcs-$(vcs).fetch $(root-url) : $(directory) ] ;
+  }
+}
+
+# check out a particular ref
+rule checkout ( directory : symbolic-ref )
+{
+  echo $(directory) ;
+
+  local vcs = [ type $(directory) ] ;
+
+  assert.in $(vcs) : $(supported-vcs) ;
+
+  echo "vcs: checking out $(symbolic-ref) at $(directory)" ;
+
+  local r = [ vcs-$(vcs).checkout $(directory) : $(symbolic-ref) ] ;
+}
+
+# return the url associated with directory
+rule root-url ( directory )
+{
+  local vcs = [ type $(directory) ] ;
+
+  assert.in $(vcs) : $(supported-vcs) ;
+
+  return [ vcs-$(vcs).root-url $(directory) ] ;
+}
+
+# return the ref associated with directory
+rule ref ( directory : symbolic-ref ? )
+{
+  local vcs = [ type $(directory) ] ;
+
+  assert.in $(vcs) : $(supported-vcs) ;
+
+  return [ vcs-$(vcs).ref $(directory) : $(symbolic-ref) ] ;
 }

@@ -8,6 +8,8 @@
 
 import vcs-svn ;
 
+import path ;
+import errors ;
 import assert ;
 
 assert.true vcs-svn.executable-exists ;
@@ -16,4 +18,55 @@ assert.true vcs-svn.executable-exists ;
 if [ vcs-svn.is-repository ../.. ]
 {
   echo [ vcs-svn.generate-version-string ../.. ] ;
+
+  echo [ vcs-svn.root-url ../.. ] ;
+  echo [ vcs-svn.ref ../.. ] ;
 }
+
+# a place to put the test repositories
+path-constant tmp : repositories ;
+
+# Test the vcs interface for the svn vcs, checking out the indicated
+# repository and symbolic reference, using the suffix as the suffix of
+# the directory created.
+rule test-vcs ( root-url : symbolic-ref : path )
+{
+  # a place to put the test repositories
+  path-constant tmp : repositories ;
+
+  local desired-url = $(root-url) ;
+  local desired-symbolic-ref = $(symbolic-ref) ;
+  local desired-dir = $(tmp)/$(path) ;
+
+  if [ path.exists $(desired-dir) ]
+  {
+    errors.error "path $(desired-dir) exists, please remove" ;
+  }
+
+  local r = [ vcs-svn.fetch $(desired-url) : $(desired-dir) ] ;
+
+  # @todo should work, but doesn't
+  # assert.true path.exists $(desired-dir) ;
+
+  local r = [ vcs-svn.checkout $(desired-dir) : $(desired-symbolic-ref) ] ;
+
+  actual-url = [ vcs-svn.root-url $(desired-dir) ] ;
+
+  assert.equal $(actual-url) : $(desired-url) ;
+
+  desired-ref = [ vcs-svn.ref $(desired-dir) : $(desired-symbolic-ref) ] ;
+  actual-ref = [ vcs-svn.ref $(desired-dir) ] ;
+
+  assert.equal $(actual-ref) : $(desired-ref) ;
+
+  # @todo not sure how to call this
+  # assert.true vcs-svn.is-repository : $(location) ;
+
+  echo [ vcs-svn.root-url $(desired-dir) ] ;
+  echo [ vcs-svn.ref $(desired-dir) ] ;
+
+  echo [ vcs-svn.generate-version-string $(desired-dir) ] ;
+}
+
+test-vcs https://github.com/boostorg/build : trunk : boost-build-trunk ;
+test-vcs https://github.com/boostorg/build : tags/boost-1.55.0 : boost-build-tags-boost-1.55.0 ;

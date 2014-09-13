@@ -8,6 +8,66 @@
 
 import vcs ;
 
+import path ;
+import errors ;
+import assert ;
+
 # print information from vcs about this repository
 echo [ vcs.generate-version-string ../.. ] ;
 echo [ vcs.type ../.. ] ;
+
+# check abstraction against however this repository is managed
+echo [ vcs.root-url ../.. ] ;
+echo [ vcs.ref ../.. ] ;
+
+# Test the vcs interface for the indicated vcs, checking out the
+# indicated repository and symbolic reference, using the suffix as the
+# suffix of the directory created.
+rule test-vcs ( vcs : root-url : symbolic-ref : path )
+{
+  # a place to put the test repositories
+  path-constant tmp : repositories/$(vcs) ;
+
+  local desired-url = $(root-url) ;
+  local desired-symbolic-ref = $(symbolic-ref) ;
+  local desired-dir = $(tmp)/$(path) ;
+
+  if [ path.exists $(desired-dir) ]
+  {
+    errors.error "path $(desired-dir) exists, please remove" ;
+  }
+
+  local r = [ vcs.fetch $(vcs) : $(desired-url) : $(desired-dir) ] ;
+
+  # @todo should work, but doesn't
+  # assert.true path.exists $(desired-dir) ;
+
+  local r = [ vcs.checkout $(desired-dir) : $(desired-symbolic-ref) ] ;
+
+  actual-url = [ vcs.root-url $(desired-dir) ] ;
+
+  assert.equal $(actual-url) : $(desired-url) ;
+
+  desired-ref = [ vcs.ref $(desired-dir) : $(desired-symbolic-ref) ] ;
+  actual-ref = [ vcs.ref $(desired-dir) ] ;
+
+  assert.equal $(actual-ref) : $(desired-ref) ;
+
+  # @todo not sure how to call this
+  # assert.true vcs-svn.is-repository : $(location) ;
+
+  echo [ vcs.root-url $(desired-dir) ] ;
+  echo [ vcs.ref $(desired-dir) ] ;
+
+  echo [ vcs.generate-version-string $(desired-dir) ] ;
+}
+
+test-vcs git : https://github.com/boostorg/build : master : boost-build-master ;
+test-vcs git : https://github.com/boostorg/build : refs/heads/master : boost-build-refs-heads-master ;
+test-vcs git : https://github.com/boostorg/build : origin/master : boost-build-origin-master ;
+test-vcs git : https://github.com/boostorg/build : boost-1.55.0 : boost-build-boost-1.55.0 ;
+test-vcs git : https://github.com/boostorg/build : tags/boost-1.55.0 : boost-build-tags-boost-1.55.0 ;
+test-vcs git : https://github.com/boostorg/build : refs/tags/boost-1.55.0 : boost-build-refs-tags-boost-1.55.0 ;
+
+test-vcs svn : https://github.com/boostorg/build : trunk : boost-build-trunk ;
+test-vcs svn : https://github.com/boostorg/build : tags/boost-1.55.0 : boost-build-boost-tags-1.55.0 ;

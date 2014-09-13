@@ -6,9 +6,9 @@ Boost.Build ``vcs`` Module
 Overview
 --------
 
-The Boost.Build ``vcs`` module exposes an extremely limited subset of
-version control system functionality to Boost.Build projects for a set
-of supported version control system back ends.  Currently, Boost.Build
+The Boost.Build ``vcs`` module exposes a limited subset of version
+control system functionality to Boost.Build projects for a set of
+supported version control system back ends.  Currently, Boost.Build
 ``vcs`` supports Subversion and Git.  Other systems should be
 straightforward to implement.
 
@@ -67,6 +67,15 @@ below.
    echo [ vcs.type . ]
    echo [ vcs.generate-version-string . ] ;
 
+   # fetch and checkout the 1.0 reference of a project kept in the Git
+   # version control system
+   vcs.get git : https://example.com/git/path/to/project/root : /path/to/desired/root ;
+   vcs.checkout : /path/to/desired/root : 1.0 ;
+
+   # verify that the URL and reference matches the desired
+   assert.equal [ vcs.root-url /path/to/desired/root ] : https://example.com/git/path/to/desired/root ;
+   assert.equal [ vcs.ref /path/to/desired/root ] : [ vcs.ref /path/to/desired/root : 1.0 ] ;
+
 Also, see the `test program for vcs <test/vcs/Jamroot>`_ for an
 exhaustive example.
 
@@ -105,6 +114,32 @@ Reference
 
       - Subversion: -<URL>--s<REV>
 
+``fetch ( vcs : root-url : directory )``
+
+   Fetches the from the URL to the root of the vcs project to the
+   indicated directory using vcs.
+
+``checkout ( directory : symbolic-ref )``
+
+   Checks out the indicated symbolic reference from the repository
+   located at the indicated directory.
+
+``root-url ( directory )``
+
+   Returns the URL to the root of the vcs project located at the
+   indicated directory.
+
+``ref ( directory : symbolic-ref ? )``
+
+   Returns a unique identifier representing the current state of the
+   vcs project located at directory.  If the symbolic reference is
+   given, the rule returns the reference of that symbolic reference,
+   not the current state of the project.
+
+Note that the only rule that requires that that the type of version control
+system is specified is the ``get`` rule.  The rest detect the version
+control system from querying the given directory.
+
 Backends Reference
 ------------------
 
@@ -115,6 +150,28 @@ Backends Reference
    directory is on a tag.  Otherwise, the format is free-form, but it
    is recommended that it be as close to the Git format for ``git
    describe`` as possible for maximum information.
+
+``fetch ( root-url : directory )``
+
+   Fetches the from the URL to the root of the vcs project to the
+   indicated directory using the backend.
+
+``checkout ( directory : symbolic-ref )``
+
+   Checks out the indicated symbolic reference from the repository
+   located at the indicated directory.
+
+``root-url ( directory )``
+
+   Returns the URL to the root of the vcs project located at the
+   indicated directory.
+
+``ref ( directory : symbolic-ref ? )``
+
+   Returns a unique identifier representing the current state of the
+   vcs project located at directory.  If the symbolic reference is
+   given, the rule returns the reference of that symbolic reference,
+   not the current state of the project.
 
 ``is-repository ( directory )``
 

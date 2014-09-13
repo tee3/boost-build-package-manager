@@ -8,6 +8,8 @@
 
 import vcs-git ;
 
+import path ;
+import errors ;
 import assert ;
 
 assert.true vcs-git.executable-exists ;
@@ -16,4 +18,56 @@ assert.true vcs-git.executable-exists ;
 if [ vcs-git.is-repository ../.. ]
 {
   echo [ vcs-git.generate-version-string ../.. ] ;
+
+  echo [ vcs-git.root-url ../.. ] ;
+  echo [ vcs-git.ref ../.. ] ;
 }
+
+# Test the vcs interface for the git vcs, checking out the indicated
+# repository and symbolic reference, using the suffix as the suffix of
+# the directory created.
+rule test-vcs ( root-url : symbolic-ref : path )
+{
+  # a place to put the test repositories
+  path-constant tmp : repositories ;
+
+  local desired-url = $(root-url) ;
+  local desired-symbolic-ref = $(symbolic-ref) ;
+  local desired-dir = $(tmp)/$(path) ;
+
+  if [ path.exists $(desired-dir) ]
+  {
+    errors.error "path $(desired-dir) exists, please remove" ;
+  }
+
+  local r = [ vcs-git.fetch $(desired-url) : $(desired-dir) ] ;
+
+  # @todo should work, but doesn't
+  # assert.true path.exists $(desired-dir) ;
+
+  local r = [ vcs-git.checkout $(desired-dir) : $(desired-symbolic-ref) ] ;
+
+  actual-url = [ vcs-git.root-url $(desired-dir) ] ;
+
+  assert.equal $(actual-url) : $(desired-url) ;
+
+  desired-ref = [ vcs-git.ref $(desired-dir) : $(desired-symbolic-ref) ] ;
+  actual-ref = [ vcs-git.ref $(desired-dir) ] ;
+
+  assert.equal $(actual-ref) : $(desired-ref) ;
+
+  # @todo not sure how to call this
+  # assert.true vcs-git.is-repository : $(location) ;
+
+  echo [ vcs-git.root-url $(desired-dir) ] ;
+  echo [ vcs-git.ref $(desired-dir) ] ;
+
+  echo [ vcs-git.generate-version-string $(desired-dir) ] ;
+}
+
+test-vcs https://github.com/boostorg/build : master : boost-build-master ;
+test-vcs https://github.com/boostorg/build : refs/heads/master : boost-build-refs-heads-master ;
+test-vcs https://github.com/boostorg/build : origin/master : boost-build-origin-master ;
+test-vcs https://github.com/boostorg/build : boost-1.55.0 : boost-build-boost-1.55.0 ;
+test-vcs https://github.com/boostorg/build : tags/boost-1.55.0 : boost-build-tags-boost-1.55.0 ;
+test-vcs https://github.com/boostorg/build : refs/tags/boost-1.55.0 : boost-build-refs-tags-boost-1.55.0 ;

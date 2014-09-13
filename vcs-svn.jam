@@ -5,6 +5,7 @@
 
 import path ;
 import errors ;
+import assert ;
 
 # Generates a version string from the Subversion repository assuming a
 # standard repository layout.
@@ -103,6 +104,114 @@ rule generate-version-string ( directory )
   }
 
   return $(v) ;
+}
+
+# Fetches from the given url to the given directory.
+#
+#   svn checkout $(root-url)/trunk $(directory)
+rule fetch ( root-url : directory )
+{
+  # @todo check results
+
+  # @todo there may not be a trunk, what to do?
+  local r = [ SHELL "svn checkout $(root-url)/trunk $(directory)" ] ;
+
+  # @todo should work, but doesn't
+  # assert.true path.exists $(directory) ;
+}
+
+# Checks out the indicated symbolic reference for the Subversion
+# repository at directory.
+#
+# A symbolic reference for Subversion is a URI based off the root URL.
+#
+#    trunk
+#    tags/1.1.1
+#    branches/devel-fixes
+rule checkout ( directory : symbolic-ref )
+{
+  # check errors, etc.
+  local ru = [ root-url $(directory) ] ;
+
+  local r = [ SHELL "( cd $(directory) && svn switch $(ru)/$(symbolic-ref) )" ] ;
+}
+
+# Returns the root URL of the Subversion repository at the given
+# directory.
+rule root-url ( directory )
+{
+  local u = ;
+
+  local lines = [ SHELL "( cd $(directory) && svn info )" ] ;
+  for local line in $(lines)
+  {
+    line = [ SPLIT_BY_CHARACTERS $(line) : "\n" ] ;
+
+    m = [ MATCH "^Repository Root: (.+)" : $(line) ] ;
+    if $(m)
+    {
+      assert.equal $(u) : ;
+
+      u = $(m[0]) ;
+    }
+  }
+
+  assert.variable-not-empty u ;
+
+  return $(u) ;
+}
+
+# Returns the ref for the symbol-ref if it is not empty or HEAD for
+# the Subversion repository at directory.
+#
+# For a Subversion repository, a ref is the URL fragment beyond the
+# root and the last changed revision.
+#
+#    tags/1.1.1@12345
+rule ref ( directory : symbolic-ref ? )
+{
+  local ru = [ root-url $(directory) ] ;
+
+  local lines = ;
+  if ! $(symbolic-ref)
+  {
+    lines = [ SHELL "( cd $(directory) && svn info )" ] ;
+  }
+  else
+  {
+    lines = [ SHELL "svn info $(ru)/$(symbolic-ref)" ] ;
+  }
+
+  assert.variable-not-empty lines ;
+
+  local r = ;
+  local sr = ;
+
+  for local line in $(lines)
+  {
+    line = [ SPLIT_BY_CHARACTERS $(line) : "\n" ] ;
+
+    m0 = [ MATCH "^Last Changed Rev: (.+)" : $(line) ] ;
+    if $(m0)
+    {
+      assert.equal $(r) : ;
+
+      r = $(m0[0]) ;
+    }
+
+    m1 = [ MATCH "^URL: $(ru)/(.+)" : $(line) ] ;
+    if $(m1)
+    {
+      assert.equal $(sr) : ;
+
+      sr = $(m1[0]) ;
+    }
+  }
+
+  assert.variable-not-empty r ;
+  assert.variable-not-empty sr ;
+
+  return $(sr)@$(r) ;
 }
 
 # Returns true if the given directory is a Git repository.

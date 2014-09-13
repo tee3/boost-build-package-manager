@@ -65,6 +65,75 @@ rule generate-version-string ( directory )
   return $(v) ;
 }
 
+# Fetches from the given url to the given directory.
+#
+#   git clone --recurse-submodules $(root-url) $(directory)
+rule fetch ( root-url : directory )
+{
+  # @todo check results
+  local r = [ SHELL "git clone --quiet $(root-url) $(directory)" ] ;
+
+  # @todo should work, but doesn't
+  # assert.true path.exists $(directory) ;
+}
+
+# Checks out the indicated symbolic reference for the Git
+# repository at directory.
+#
+# A symbolic reference for Git is a URI based off the 'refs/' base or
+# anything else that looks like a reference or a commit.
+#
+#    refs/heads/master
+#    refs/tags/1.1.1
+#    refs/heads/devel-fixes
+rule checkout ( directory : symbolic-ref )
+{
+  symbolic-ref = [ normalize-symbolic-ref $(symbolic-ref) ] ;
+
+  # check errors, etc.
+  local r = [ SHELL "(cd $(directory) && git checkout --quiet $(symbolic-ref))" ] ;
+  local s = [ SHELL "(cd $(directory) && git submodule --quiet update --init --recursive)" ] ;
+}
+
+# Returns the root URL of the Git repository at the given directory.
+rule root-url ( directory )
+{
+  local u = ;
+
+  local lines = [ SHELL "(cd $(directory) && git remote -v)" ] ;
+  for local line in $(lines)
+  {
+    local m = [ MATCH "^origin[ 	]+(.+) .fetch." : $(line) ] ;
+    if $(m)
+    {
+      assert.equal $(u) : ;
+
+      u = $(m[0]) ;
+    }
+  }
+
+  assert.variable-not-empty u ;
+
+  return $(u) ;
+}
+
+# Returns the ref for the symbolic-ref requested or HEAD if it is
+# empty for the git repository at directory.
+#
+# For a Git repository, a ref is the SHA-1.
+#
+#    deed12131a3334df4322
+rule ref ( directory : symbolic-ref ? )
+{
+  if ! $(symbolic-ref)
+  {
+    symbolic-ref = HEAD ;
+  }
+  symbolic-ref = [ normalize-symbolic-ref $(symbolic-ref) ] ;
+
+  return [ SHELL "(cd $(directory) && git log -n 1 --pretty=format:\"%H\" $(symbolic-ref))" ] ;
+}
+
 # Returns true if the given directory is a Git repository.
 rule is-repository ( directory )
 {
@@ -77,4 +146,27 @@ rule executable-exists ( )
 {
   # @todo always say true for now
   return 1 == 1 ;
+}
+
+# normalize symbolic-ref
+#
+#    refs/heads/* -> origin/*
+#    refs/tags/* -> *
+local rule normalize-symbolic-ref ( symbolic-ref )
+{
+  local m0 = [ MATCH "^(refs/)?tags/(.+)$" : $(symbolic-ref) ] ;
+  if $(m0)
+  {
+    symbolic-ref = $(m0[2]) ;
+  }
+  else
+  {
+    local m1 = [ MATCH "^(refs/)?heads/(.+)$" : $(symbolic-ref) ] ;
+    if $(m1)
+    {
+      symbolic-ref = origin/$(m1[2]) ;
+    }
+  }
+
+  return $(symbolic-ref) ;
 }
