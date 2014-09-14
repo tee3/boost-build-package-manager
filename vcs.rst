@@ -88,8 +88,9 @@ implement the interface.  The backend file should be named
 should contain implementations for each of the functions defined
 below.
 
-Currently, there are two supported backends:
+Currently, there are three supported backends:
 
+- Archives from a URL
 - Git
 - Subversion
 
@@ -197,5 +198,6 @@ but they are included here for reference.
 Backends
 ~~~~~~~~
 
+- `vcs-archive <./vcs-archive.jam>`_
 - `vcs-git <./vcs-git.jam>`_
 - `vcs-svn <./vcs-svn.jam>`_

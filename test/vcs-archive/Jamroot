@@ -1,0 +1,60 @@
+# @todo HACK - add tools to the Boost.Build path
+{
+  import modules ;
+
+  local x = [ modules.peek : BOOST_BUILD_PATH ] ;
+  modules.poke : BOOST_BUILD_PATH : ../.. $(x) ;
+}
+
+import vcs-archive ;
+
+import path ;
+import errors ;
+import assert ;
+
+assert.true vcs-archive.executable-exists ;
+
+# Test the vcs interface for the git vcs, checking out the indicated
+# repository and symbolic reference, using the suffix as the suffix of
+# the directory created.
+rule test-vcs ( root-url : symbolic-ref : path )
+{
+  # a place to put the test repositories
+  path-constant tmp : repositories ;
+
+  local desired-url = $(root-url) ;
+  local desired-symbolic-ref = $(symbolic-ref) ;
+  local desired-dir = $(tmp)/$(path) ;
+
+  if [ path.exists $(desired-dir) ]
+  {
+    errors.error "path $(desired-dir) exists, please remove" ;
+  }
+
+  local r = [ vcs-archive.fetch $(desired-url) : $(desired-dir) ] ;
+
+  # @todo should work, but doesn't
+  # assert.true path.exists $(desired-dir) ;
+
+  local r = [ vcs-archive.checkout $(desired-dir) : $(desired-symbolic-ref) ] ;
+
+  actual-url = [ vcs-archive.root-url $(desired-dir) ] ;
+
+  assert.equal $(actual-url) : $(desired-url) ;
+
+  desired-ref = [ vcs-archive.ref $(desired-dir) : $(desired-symbolic-ref) ] ;
+  actual-ref = [ vcs-archive.ref $(desired-dir) ] ;
+
+  assert.equal $(actual-ref) : $(desired-ref) ;
+
+  # @todo not sure how to call this
+  # assert.true vcs-archive.is-repository : $(location) ;
+
+  echo [ vcs-archive.root-url $(desired-dir) ] ;
+  echo [ vcs-archive.ref $(desired-dir) ] ;
+
+  echo [ vcs-archive.generate-version-string $(desired-dir) ] ;
+}
+
+test-vcs https://github.com/boostorg/build/archive/master.tar.gz : master : boost-build-master ;
+test-vcs https://github.com/boostorg/build/archive/boost-1.55.0.tar.gz : boost-1.55.0 : boost-build-boost-1.55.0 ;

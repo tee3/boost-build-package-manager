@@ -3,12 +3,15 @@ B2FLAGS =
 
 all:
 
-test: vcs-git vcs-svn vcs package-manager
+test: vcs-archive vcs-git vcs-svn vcs package-manager
 
 package-manager:
 	cd test/$@ ; $(B2) -a
 
 vcs:
+	cd test/$@ && $(B2) -a
+
+vcs-archive:
 	cd test/$@ && $(B2) -a
 
 vcs-git:

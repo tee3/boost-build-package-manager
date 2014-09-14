@@ -41,8 +41,15 @@ package-manager.require-package boost-build : boost-1.54.0 : https://github.com/
 # assert.equal [ package-manager.versioned-package-path boost-build : boost-1.54.0 ] : $(package-root)/boost-build-boost-1.54.0 ;
 # assert.equal [ package-manager.installed-packages ] : boost-build-master boost-build-boost-1.55.0 boost-build-boost-1.54.0 ;
 
+package-manager.require-package boost-build : boost-1.53.0 : https://github.com/boostorg/build/archive/boost-1.53.0.tar.gz : archive ;
+
+# assert.true package-manager.is-installed boost-build : boost-1.53.0 ;
+# assert.equal [ package-manager.versioned-package-path boost-build : boost-1.53.0 ] : $(package-root)/boost-build-boost-1.53.0 ;
+# assert.equal [ package-manager.installed-packages ] : boost-build-master boost-build-boost-1.55.0 boost-build-boost-1.53.0 ;
+
 echo [ package-manager.installed-packages ] ;
 
 assert.in boost-build-master : [ package-manager.installed-packages ] ;
 assert.in boost-build-boost-1.55.0 : [ package-manager.installed-packages ] ;
 assert.in boost-build-boost-1.54.0 : [ package-manager.installed-packages ] ;
+assert.in boost-build-boost-1.53.0 : [ package-manager.installed-packages ] ;

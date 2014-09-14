@@ -1,0 +1,169 @@
+# Version Control System - Web Archives
+#
+# @todo detect if curl or wget is available
+
+import path ;
+import errors ;
+import assert ;
+
+# Generates a version string from an archive directory assuming a
+# naming convention.
+#
+#    <tag-name>
+rule generate-version-string ( directory )
+{
+  # @todo not sure why this doesn't work
+  # assert.true path.exists $(directory)/.vcs-archive-version-string ;
+
+  return [ read-file $(directory)/.vcs-archive-version-string ] ;
+}
+
+# Fetches from the given url to the given directory.
+rule fetch ( root-url : directory )
+{
+  path.makedirs $(directory) ;
+
+  # @todo check results
+  # @todo lots more work, package types, etc
+  local r = [ fetch-url $(root-url) : $(directory)/.vcs-archive.tar.gz ] ;
+
+  # @todo should work, but doesn't
+  # assert.true path.exists $(directory) ;
+
+  # store the root-url for use later
+  write-file $(directory)/.vcs-archive-root-url : $(root-url) ;
+}
+
+# Checks out the indicated symbolic reference for the archive
+# repository at directory.
+#
+# A symbolic reference for an archive repository is the URL it was
+# fetched from.
+#
+#    trunk
+#    tags/1.1.1
+#    branches/devel-fixes
+rule checkout ( directory : symbolic-ref )
+{
+###  program-string = "
+###import tarfile
+###
+###archive = tarfile.open('$(directory)/.vcs-archive.tar.gz')
+###archive.extractall('$(directory)', members=stripped_leading_directory)
+###archive.close()
+###" ;
+###
+###  python-with-string $(program-string) ;
+
+  # @todo check results
+  local r = [ SHELL "tar -x -C $(directory) --strip-components 1 -z -f $(directory)/.vcs-archive.tar.gz" ] ;
+
+  write-file $(directory)/.vcs-archive-version-string : $(symbolic-ref) ;
+}
+
+# Returns the root URL of the archive repository at the given
+# directory.
+rule root-url ( directory )
+{
+  return [ read-file $(directory)/.vcs-archive-root-url ] ;
+}
+
+# Returns the ref for the symbolic-ref if it is not empty or HEAD for
+# the archive repository at directory.
+#
+# For an archive repository, a ref is the URL fragment beyond the root
+# and the last changed revision.
+#
+#    tags/1.1.1@12345
+rule ref ( directory : symbolic-ref ? )
+{
+  if $(symbolic-ref)
+  {
+    # @todo not sure why this doesn't work
+    # assert.true path.exists $(directory)/.vcs-archive-version-string ;
+
+    local current-symbolic-ref = [ read-file $(directory)/.vcs-archive-version-string ] ;
+
+    if $(current-symbolic-ref) = $(symbolic-ref)
+    {
+      return [ read-file $(directory)/.vcs-archive-root-url ] ;
+    }
+    else
+    {
+      # we only know the "ref" to what we have, so return nothing
+      return ;
+    }
+  }
+  else
+  {
+    return [ read-file $(directory)/.vcs-archive-root-url ] ;
+  }
+}
+
+# Returns true if the given directory is an archive repository.
+rule is-repository ( directory )
+{
+  # @todo is there a better way?
+  return [ path.exists $(directory)/.vcs-archive-root-url ] ;
+}
+
+# Return true if the executable exists to operate on archives.
+#
+# @todo maybe we should just require python and 7z.
+#
+# - python and 7z
+#
+# OR
+#
+# - wget or curl
+# - tar + gzip/bzip2
+# - unzip
+# - 7z
+rule executable-exists ( )
+{
+  # @todo always say true for now
+  return 1 == 1 ;
+}
+
+local rule fetch-url ( url : filename )
+{
+  program-string = "
+import urllib
+
+urllib.urlretrieve('$(url)','$(filename)')
+" ;
+
+  local r = [ python-with-string $(program-string) ] ;
+}
+
+# Returns the contents of file referenced by filename as a string.
+local rule read-file ( filename )
+{
+  program-string = "
+import sys
+
+with open('$(filename)', 'r') as fp:
+    sys.stdout.write(fp.read())
+" ;
+
+  return [ python-with-string $(program-string) ] ;
+}
+
+# Writes the string to the contents of the file referenced to by
+# filename.
+local rule write-file ( filename : string )
+{
+  echo $(string) ;
+
+  program-string = "
+with open('$(filename)', 'w') as fp:
+    fp.write('$(string)')
+" ;
+
+  python-with-string $(program-string) ;
+}
+
+local rule python-with-string ( program-string )
+{
+  return [ SHELL "echo \"$(program-string)\" | python -" ] ;
+}

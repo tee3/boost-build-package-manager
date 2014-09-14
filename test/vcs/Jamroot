@@ -71,3 +71,5 @@ test-vcs git : https://github.com/boostorg/build : refs/tags/boost-1.55.0 : boos
 
 test-vcs svn : https://github.com/boostorg/build : trunk : boost-build-trunk ;
 test-vcs svn : https://github.com/boostorg/build : tags/boost-1.55.0 : boost-build-boost-tags-1.55.0 ;
+
+test-vcs archive : https://github.com/boostorg/build/archive/boost-1.55.0.tar.gz : boost-1.55.0 : boost-build-boost-1.55.0 ;
