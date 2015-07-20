@@ -69,13 +69,13 @@ projects.  The example below shows a complete example.
    # progresses
 
    # @todo detect boost.build by presence of Jamroot?
-   package-manager.source_package project-a
+   package-manager.require-package project-a
       : 1.0
       : https://example.com/svn/project-a
       : svn
       : boost.build
       ;
-   package-manager.source_package project-b
+   package-manager.require-package project-b
       : 2.0
       : https://example.com/git/project-b
       : git
@@ -183,17 +183,17 @@ Usage
    #
    # @todo allow to specify the type of build system (boost.build,
    # cmake, autoconf, make, etc.) if it can be used easily
-   package-manager.source_package package-a
+   package-manager.require-package package-a
       : 1.0
       : https://example.com/svn/package-a
       : svn
       ;
-   package-manager.source_package package-b
+   package-manager.require-package package-b
       : 2.0
       : https://example.com/git/package-b
       : git
       ;
-   package-manager.source_package package-c
+   package-manager.require-package package-c
       : 2.0
       : https://example.com/git/package-c
       : git
