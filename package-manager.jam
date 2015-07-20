@@ -29,6 +29,8 @@ import assert ;
 root = ;
 
 # Initialize the source package manager.
+#
+# @todo default directory to local .packages folder?
 rule init ( directory )
 {
   root = $(directory) ;
