@@ -26,11 +26,12 @@ behavior or when multiple projects are sharing a single package, so it
 is not a recommended use case.
 
 There are some existing tools that do something similar, but none yet
-seems to solve the whole problem.  The ``package-manager`` does solve
-the whole problem either, but it is portable.  While the version
-control system interaction is currently written in Boost.Build and the
-command-line clients, it would be straightforward to replace this code
-with a better tool.
+seems to solve the whole problem.  The ``package-manager`` does not
+solve the whole problem either, but it is portable across all systems
+that support Boost.Build and the required version control systems.
+While the version control system interaction is currently written in
+Boost.Build and the command-line clients, it would be straightforward
+to replace this code with another tool.
 
 We define the following terms for the purposes of this document.
 
@@ -91,11 +92,12 @@ projects.  The example below shows a complete example.
 	 /package-manager//project-b
       ;
 
-Note that the properties above could be the basis of a package
-configuration file format.  This could be considered an improvement
-over putting the configuration directly in a Boost.Build control file
-as it could be easily translated for use by some future system that
-provides a more fully-featured package management system.
+.. note::
+   Note that the properties above could be the basis of a package
+   configuration file format.  This could be considered an improvement
+   over putting the configuration directly in a Boost.Build control
+   file as it could be easily translated for use by some future system
+   that provides a more fully-featured package management system.
 
 ::
 
