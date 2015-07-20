@@ -64,12 +64,8 @@ projects.  The example below shows a complete example.
 
 ::
 
-   using package-manager : /path/to/packages : path/to/.packages ;
+   using package-manager : path/to/packages ;
 
-   # the package list and version numbers here will change as time
-   # progresses
-
-   # @todo detect boost.build by presence of Jamroot?
    package-manager.require-package project-a
       : 1.0
       : https://example.com/svn/project-a
@@ -83,7 +79,6 @@ projects.  The example below shows a complete example.
       : boost.build
       ;
 
-   # this will not have to change when package versions above change
    exe example
       : # sources
          example.cpp
@@ -101,7 +96,7 @@ projects.  The example below shows a complete example.
 
 ::
 
-   # .packages
+   # .bpmconfig
    [project-a]
       symbolic-ref = 1.0
       root-url = http://example.com/svn/project-a
@@ -115,9 +110,9 @@ projects.  The example below shows a complete example.
 
 ::
 
-   # this will detect and use existing .packages or .gitconfig or
-   # svn:externals properties, or alternatively the name of the package
-   # configuration can be given
+   # detect and use existing .bpmconfig or .gitmodules or svn:externals
+   # properties, or alternatively the name of the package configuration
+   # can be given
 
    using package-manager ;
 
@@ -182,23 +177,23 @@ Usage
    using package-manager ;
 
    # list source project dependencies
-   #
-   # @todo allow to specify the type of build system (boost.build,
-   # cmake, autoconf, make, etc.) if it can be used easily
    package-manager.require-package package-a
       : 1.0
       : https://example.com/svn/package-a
       : svn
+      : boost-build
       ;
    package-manager.require-package package-b
       : 2.0
       : https://example.com/git/package-b
       : git
+      : boost-build
       ;
    package-manager.require-package package-c
       : 2.0
       : https://example.com/git/package-c
       : git
+      : boost-build
       ;
 
    # note that the usage of the source packages is package-dependent,
