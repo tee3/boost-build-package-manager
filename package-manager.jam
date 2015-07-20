@@ -47,7 +47,11 @@ rule init ( directory )
 # @todo this depends on git to parse packages
 rule detect-configuration ( directory )
 {
-  if [ path.exists $(directory)/.gitmodules ]
+  if [ path.exists $(directory)/.bpmconfig ]
+  {
+    # parse .bpmconfig and set up source packages
+  }
+  else if [ path.exists $(directory)/.gitmodules ]
   {
     # parse .gitmodules and set up source packages
   }
