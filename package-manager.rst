@@ -203,22 +203,15 @@ Usage
    #
    # @todo we should do this for them since we don't want them to have
    # to repeat the version (and the name, but the version changes)
-   alias package-a
-      : sources
-         [ package-manager.location package-a : 1.0 ]/path/to/boost-build-jamfile
-      ;
-   alias package-b
-      : sources
-         [ package-manager.location package-b : 2.0 ]/path/to/boost-build-jamfile
-      ;
-   alias package-c
-      : sources
-         [ package-manager.location package-c : 2.0 ]/path/to/boost-build-jamfile
-      ;
+   local package-a-location = [ package-manager.versioned-package-path package-a : 1.0 ] ;
+   alias package-a : $(package-a-location)/path/to/boost-build-jamfile ;
+   local package-b-location = [ package-manager.versioned-package-path package-b : 2.0 ] ;
+   alias package-b : $(package-b-location)/path/to/boost-build-jamfile ;
+   local package-c-location = [ package-manager.versioned-package-path package-c : 2.0 ] ;
+   alias package-c : $(package-c-location)/path/to/boost-build-jamfile ;
 
    # @todo with Boost.Build support
-   # exe example : example.cpp /package-manager/package-a-1.0 ;
-   exe example : example.cpp package-a ;
+   exe example : example.cpp package-a package-b package-c ;
 
 Reference
 ---------
