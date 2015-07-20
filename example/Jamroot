@@ -1,0 +1,29 @@
+# @todo HACK - add tools to the Boost.Build path
+{
+  import modules ;
+
+  local x = [ modules.peek : BOOST_BUILD_PATH ] ;
+  modules.poke : BOOST_BUILD_PATH : .. $(x) ;
+}
+
+import testing ;
+
+# @todo this is the desired syntax
+# using package-manager : .packages ;
+import package-manager ;
+package-manager.init .packages ;
+
+package-manager.require-package liba
+  : 1.0
+  : ../liba
+  : git
+  : boost-build
+  ;
+package-manager.require-package libb
+  : 1.0
+  : ../libb
+  : git
+  : boost-build
+  ;
+
+run example.cpp liba libb ;

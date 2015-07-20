@@ -109,28 +109,30 @@ rule require-package ( name : symbolic-ref : root-url : vcs : build-system ? )
     errors.user-error "package-manager:$(vcs): $(package-dir) at $(current-ref) not $(ref)" ;
   }
 
-###  # Boost.Build packages are set up as aliases.
-###  # @todo could allow user to specify the target
-###  if $(build-system)
-###  {
-###    local target-path = ;
-###    if $(build-system) = boost.build
-###    {
-###       target-path = $(package-dir)/$(name) ;
-###    }
-###    else
-###    {
-###       target-path = $(package-dir)/$(build-system) ;
-###    }
-###
-###    alias $(package-name)
-###      : # sources
-###      : # requirements
-###      : # usage-requirements
-###         $(target-path)
-###      : # default-build
-###      ;
-###  }
+  # Boost.Build packages are set up as aliases.
+  # @todo could allow user to specify the target
+  if $(build-system)
+  {
+    local target-path = ;
+    if $(build-system) = boost.build
+    {
+       target-path = $(package-dir)/$(name) ;
+    }
+    else
+    {
+       target-path = $(package-dir)/$(build-system) ;
+    }
+
+    project /package-manager/$(name) ;
+
+    alias $(package-name)
+      : # sources
+      : # requirements
+      : # usage-requirements
+         $(target-path)
+      : # default-build
+      ;
+  }
 }
 
 # Returns the list of installed packages.

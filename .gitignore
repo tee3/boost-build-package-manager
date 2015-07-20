@@ -1,1 +1,5 @@
 /test/*/bin/
+
+# example project
+/example/.packages/
+/example/bin/
