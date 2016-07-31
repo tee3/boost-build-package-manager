@@ -36,7 +36,7 @@ rule generate-version-string ( directory )
     errors.user-error "vcs-svn: $(directory) is not a Subversion repository." ;
   }
 
-  local tag = "0" ;
+  local tag = "" ;
   local branch = "" ;
   local commits = "0" ;
   local revision = "" ;
