@@ -98,7 +98,7 @@ rule generate-version-string ( directory )
   }
 
   # check if the working copy is dirty
-  if [ SHELL "cd $(directory) ; svn diff" ] != ""
+  if [ SHELL "cd $(directory) && svn diff" ] != ""
   {
     v = "$(v)-dirty" ;
   }
