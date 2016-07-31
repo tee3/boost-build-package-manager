@@ -48,7 +48,10 @@ rule generate-version-string ( directory )
     local v0 = [ SHELL "(cd $(directory) && git describe --tags --long --dirty)" ] ;
     v0 = [ SPLIT_BY_CHARACTERS $(v0) : "\n" ] ;
     local m0 = [ MATCH "^(.+)-([0-9]+)-g([0-9a-fA-F]+)(-dirty)?$" : $(v0) ] ;
-    assert.variable-not-empty m0 ;
+    if ! $(m0)
+    {
+      m0 = "" "" ;
+    }
 
     local v1 = [ SHELL "(cd $(directory) && git describe --all --long --dirty)" ] ;
     v1 = [ SPLIT_BY_CHARACTERS $(v1) : "\n" ] ;
