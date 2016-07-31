@@ -158,7 +158,7 @@ While rewriting history is a controversial topic, it is sometimes
 necessary or useful to do so.  Depending on the approach taken in the
 version control system, rewriting the history of any project may break
 projects that have the rewritten project as dependency. With a
-distributed version control system (DOCS), it is impossible to know if
+distributed version control system (DVCS), it is impossible to know if
 any projects depend on the rewritten project.
 
 Note that this wouldn't necessarily have to be if some rules were
