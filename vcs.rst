@@ -187,8 +187,8 @@ Backends Reference
 Implementation
 --------------
 
-Hopefully, the implementation will not be required to use this module,
-but they are included here for reference.
+Hopefully, knowing the implementation will not be required to use this
+module, but they are included here for reference.
 
 ``vcs`` Interface
 ~~~~~~~~~~~~~~~~~

@@ -16,7 +16,7 @@ import assert ;
 #
 # If not on a tag:
 #
-# @todo work to match the git format, missing nearest tag and commits
+# @todo work to match the Git format, missing nearest tag and commits
 # since nearest tag
 #
 #    -<URL>--s<REV>
@@ -214,14 +214,14 @@ rule ref ( directory : symbolic-ref ? )
   return $(sr)@$(r) ;
 }
 
-# Returns true if the given directory is a Git repository.
+# Returns true if the given directory is a Subversion repository.
 rule is-repository ( directory )
 {
   # @todo is there a better way?
   return [ path.exists "$(directory)/.svn" ] ;
 }
 
-# Return true if the Git executable exists.
+# Return true if the Subversion executable exists.
 rule executable-exists ( )
 {
   # @todo always say true for now
